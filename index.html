@@ -305,7 +305,7 @@ async function loadRatings() {
     if (r.ok) {
       const j = await r.json();
       ghSha = j.sha;
-      const content = JSON.parse(atob(j.content.replace(/\n/g, '')));
+      const content = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g, '')), c => c.charCodeAt(0))));
       ratings = content;
       localStorage.setItem('london-ratings-2026', JSON.stringify(ratings));
     }
@@ -336,7 +336,7 @@ async function _pushToGitHub() {
     // Get latest SHA first to avoid conflicts
     const head = await fetch(GH_API, { headers: { Accept: 'application/vnd.github.v3+json', Authorization: `token ${token}` } });
     if (head.ok) { const hj = await head.json(); ghSha = hj.sha; }
-    const body = { message: 'Update ratings', content: btoa(JSON.stringify(ratings, null, 2)), sha: ghSha };
+    const body = { message: 'Update ratings', content: btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(ratings, null, 2)))), sha: ghSha };
     const r = await fetch(GH_API, { method: 'PUT', headers: { Accept: 'application/vnd.github.v3+json', Authorization: `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (r.ok) {
       const rj = await r.json(); ghSha = rj.content.sha;
@@ -434,7 +434,7 @@ function buildMarkers() {
   data.forEach(d => {
     const ll = getLL(d);
     const m = L.marker(ll,{icon:makeIcon(d,false)}); m._d=d;
-    m.on('click',()=>openPopup(d,m)); m.addTo(leafletMap); markers[d.id]=m;
+    m.on('click',()=>{openPopup(d,m);scrollToCard(d.id);}); m.addTo(leafletMap); markers[d.id]=m;
     bounds.extend(ll);
   });
   if (bounds.isValid()) leafletMap.fitBounds(bounds, {padding:[30,30], maxZoom:14});
@@ -447,7 +447,7 @@ function openPopup(d, m) {
     const col=u==='peter'?'#3b82f6':u==='anne'?'#ec4899':'#f97316';
     rhtml+=`<div class="pp-rate-row"><span style="color:${col};font-weight:600;width:46px;display:inline-block">${u[0].toUpperCase()+u.slice(1)}</span>`;
     for(let i=1;i<=5;i++) rhtml+=`<span style="color:${i<=s?'#f59e0b':'#ddd'}">★</span>`;
-    if(c) rhtml+=` <span style="color:#999;font-style:italic">${c}</span>`;
+    if(c) rhtml+=` <span style="color:#999;font-style:italic">${c.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>`;
     rhtml+='</div>';
   });
   const saving=d.dkkO>d.dkk?`<span style="text-decoration:line-through;color:#ccc;font-size:10px;margin-left:4px">${kr(d.dkkO)}</span> <span style="color:#16a34a;font-size:9px">−${kr(d.dkkO-d.dkk)}</span>`:'';
@@ -467,6 +467,15 @@ function openPopup(d, m) {
     (avg>0?`<div class="pp-ratings">Family avg: <strong style="color:#f59e0b">${avg.toFixed(1)}★</strong>${rhtml}</div>`:'')+
     `<a class="pp-link" style="color:${platCol}" href="${d.url}" target="_blank" rel="noopener">Open on ${d.pl} →</a>`,
     {maxWidth:300}).openPopup();
+}
+
+function scrollToCard(id) {
+  const card = document.querySelector(`.card[data-id="${id}"]`);
+  if (!card) return;
+  const panel = document.getElementById('panel');
+  panel.scrollTo({ top: card.offsetTop - panel.offsetTop - 8, behavior: 'smooth' });
+  card.classList.add('hov');
+  setTimeout(() => card.classList.remove('hov'), 1500);
 }
 
 // ── FILTER / SORT / RENDER ─────────────────────────────────────────────────────
