@@ -192,15 +192,15 @@ const AREA_LL = {
   "Elephant & Castle":[51.4945,-0.1005],"Regents Park":[51.5270,-0.1535],"Central London":[51.5120,-0.1280],
   "City of London":[51.5150,-0.0930],"Marylebone":[51.5224,-0.1530],
   "Notting Hill":[51.5115,-0.2055],"Maida Vale":[51.5295,-0.1870],"Kilburn":[51.5370,-0.1963],
-  "Bloomsbury":[51.5225,-0.1275],
+  "Bloomsbury":[51.5225,-0.1275],"Farringdon":[51.5222,-0.1079],"Chinatown":[51.5118,-0.1311],
 };
 
 // p and po injected at runtime from prices.json
 const PROPERTIES = [
   // ── BOOKING.COM ──────────────────────────────────────────────────────────────────────────
-  {id:1,  pl:"Booking.com", n:"Central London Flat in Westminster", r:9.2, rv:112,  a:"Westminster",      km:1.2, br:2, beds:"1 dbl, 2 sofa",           ba:1, genius:true,  fc:false, cs:2, cn:"Brother on sofa bed — not ideal",   k:true,  w:false, tube:"Westminster",           slug:"central-london-flat-in-westminster"},
+  {id:1,  pl:"Booking.com", n:"Central London Flat in Westminster", r:9.2, rv:113,  a:"Westminster",      km:1.2, br:2, beds:"1 dbl, 2 sofa",           ba:1, genius:true,  fc:false, cs:2, cn:"Brother on sofa bed — not ideal",   k:true,  w:false, tube:"Westminster",           slug:"central-london-flat-in-westminster"},
   {id:2,  pl:"Booking.com", n:"Luxury 2BR, Bayswater",             r:9.3, rv:24,   a:"Bayswater",         km:3.2, br:2, beds:"1 queen, 1 dbl, 1 sofa",   ba:2, genius:true,  fc:true,  cs:5, cn:"2 bathrooms! Sofa for Emilie",      k:true,  w:true,  tube:"Bayswater",             slug:"luxury-two-bedroom-apartment-in-bayswater"},
-  {id:3,  pl:"Booking.com", n:"Whitfield Street Apts",             r:8.3, rv:404,  a:"Fitzrovia",          km:1.5, br:2, beds:"2 dbls, 1 sofa",           ba:2, genius:true,  fc:false, cs:5, cn:"Split-level. 2 baths!",              k:true,  w:false, tube:"Goodge Street",         slug:"whitfield-street-apartments-greater-london"},
+  {id:3,  pl:"Booking.com", n:"Whitfield Street Apts",             r:8.3, rv:405,  a:"Fitzrovia",          km:1.5, br:2, beds:"2 dbls, 1 sofa",           ba:2, genius:true,  fc:false, cs:4, cn:"Split-level. 2 baths! Emilie on sofa",k:true,  w:false, tube:"Goodge Street",         slug:"whitfield-street-apartments"},
   {id:4,  pl:"Booking.com", n:"Imperial Balfe St Apt",             r:8.5, rv:52,   a:"Kings Cross",        km:2.2, br:2, beds:"2 dbls, 1 sofa",           ba:1, genius:true,  fc:true,  cs:4, cn:"Big Genius saving!",                 k:true,  w:false, tube:"King's Cross St Pancras",slug:"imperial-balfe-street-apartment"},
   {id:5,  pl:"Booking.com", n:"Roland House",                      r:8.1, rv:1119, a:"Kensington",         km:3.5, br:2, beds:"1 queen, 1 twin, 1 sofa",  ba:1, genius:true,  fc:true,  cs:4, cn:"Small 42m²",                         k:false, w:false, tube:"Gloucester Road",       slug:"roland-house-apartments-london"},
   {id:6,  pl:"Booking.com", n:"Cosy 2BR, Earls Court",             r:8.9, rv:10,   a:"Earls Court",        km:3.8, br:2, beds:"1 king, 1 queen, 2 sofa",  ba:1, genius:true,  fc:true,  cs:5, cn:"75m² spacious!",                     k:true,  w:false, tube:"Earl's Court",          slug:"cosy-2br-central-london-flat-in-earls-court"},
@@ -218,6 +218,9 @@ const PROPERTIES = [
   {id:18, pl:"Booking.com", n:"Marlin Aldgate",                    r:8.1, rv:2519, a:"Tower Hamlets",      km:5.2, br:2, beds:"TBC",                      ba:1, genius:true,  fc:false, cs:3, cn:"Apart-hotel, 5.2km out",              k:true,  w:false, tube:"Aldgate East",          slug:"marlin-apartments-aldgate"},
   {id:33, pl:"Booking.com", n:"Central 2-Bed, Eye Views",          r:8.4, rv:31,   a:"Southbank",          km:1.5, br:2, beds:"1 full, 1 queen",          ba:1, genius:true,  fc:true,  cs:3, cn:"Exceptional value! Only 2 beds",      k:true,  w:false, tube:"Waterloo",              slug:"spacious-split-level-flat-with-fantastic-views"},
   {id:34, pl:"Booking.com", n:"Soho Skyline Penthouse",            r:8.6, rv:10,   a:"Soho",               km:1.0, br:2, beds:"1 sofa, 2 queens",         ba:1, genius:true,  fc:true,  cs:4, cn:"130m² penthouse + terrace!",          k:true,  w:false, tube:"Oxford Circus",         slug:"the-kensington-crown"},
+
+  {id:38, pl:"Booking.com", n:"Cleveland Residences, Farringdon",   r:9.1, rv:1184, a:"Farringdon",         km:2.0, br:2, beds:"2 kings, 1 sofa",           ba:1, genius:false, fc:false, cs:4, cn:"9.1 rating! 2 kings + sofa. 1184 reviews",k:true,  w:false, tube:"Farringdon",            slug:"modern-and-cozy-apartments-in-central-london"},
+  {id:39, pl:"Booking.com", n:"London Chinatown Apartments",        r:9.2, rv:357,  a:"Chinatown",          km:0.5, br:2, beds:"1 dbl, 1 king",             ba:1, genius:false, fc:false, cs:3, cn:"9.2! Chinatown location. Only 2 beds",   k:true,  w:false, tube:"Leicester Square",      slug:"chinatown-apartments-london"},
 
   // ── AIRBNB — fresh Playwright scrape 5 Mar 2026, beds verified from room pages ──────────
   {id:21, pl:"Airbnb", n:"Beautiful 2BR, King's Cross",       r:9.6, rv:216, a:"Kings Cross",       km:2.5, br:2, beds:"2 dbls, 1 sofa",            ba:2, genius:false, fc:false, cs:4, cn:"2 baths, Superhost. Emilie on sofa",           k:true,  w:false, tube:"King's Cross St Pancras",roomId:"13051741"},
