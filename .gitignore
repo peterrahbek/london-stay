@@ -1,0 +1,6 @@
+airbnb-raw.json
+airbnb-beds.json
+airbnb-merged.json
+ratings.json
+node_modules/
+.DS_Store

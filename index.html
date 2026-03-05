@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>London Accommodation Shortlist — May 2026</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f8f7f4;--card:#fff;--border:#e2e0dc;--ink:#1a1a1a;--muted:#888;
+  --booking:#003580;--airbnb:#FF385C;--green:#16a34a;--amber:#b45309;--red:#dc2626;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
+#app{display:flex;flex-direction:column;height:100vh}
+#map{flex:0 0 45vh;min-height:280px}
+#panel{flex:1;overflow-y:auto;border-top:2px solid var(--ink);background:var(--bg)}
+.hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#fff}
+.hdr h1{font-family:'DM Serif Display',serif;font-size:20px}
+.hdr-sub{font-size:11px;color:var(--muted)}
+.hdr-meta{text-align:right;font-size:10px;color:#999;line-height:1.6}
+.user-bar{padding:6px 16px;display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--border);background:#fefce8;font-size:11px;flex-wrap:wrap}
+.user-btn{padding:4px 12px;font-size:11px;font-weight:600;border:2px solid #ccc;border-radius:20px;background:#fff;cursor:pointer;font-family:'DM Sans';transition:all .12s}
+.user-btn.sel-peter{background:#3b82f6;color:#fff;border-color:#3b82f6}
+.user-btn.sel-anne{background:#ec4899;color:#fff;border-color:#ec4899}
+.user-btn.sel-christian{background:#f97316;color:#fff;border-color:#f97316}
+#save-status{font-size:10px;color:#aaa}
+#save-status.ok{color:#16a34a}
+#save-status.err{color:#dc2626}
+.ctrl-bar{padding:8px 16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);background:#fff}
+.lbl{font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.fbtn{padding:4px 10px;font-size:10px;font-weight:600;border:1.5px solid #ccc;border-radius:5px;background:#fff;cursor:pointer;font-family:'DM Sans';transition:all .12s}
+.fbtn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fbtn:hover:not(.active){background:#f0f0f0}
+.sep{color:#ddd;font-size:14px}
+.stats-bar{padding:5px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);background:#fff;font-size:10px;color:#888}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:3px}
+.explainer{margin:10px 16px 4px;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:10px;color:#666;line-height:1.6;cursor:pointer}
+.explainer-header{display:flex;justify-content:space-between;align-items:center}
+.explainer-detail{display:none;margin-top:8px}
+.cards{padding:8px 16px 24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;transition:background .15s,border-color .15s;cursor:pointer}
+.card:hover,.card.hov{background:#fefce8;border-color:#ca8a04}
+.card-num{font-size:11px;color:#999;margin-right:4px}
+.card-name{font-size:13px;font-weight:700}
+.card-name a{color:var(--ink);text-decoration:none}
+.card-name a:hover{text-decoration:underline}
+.badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;color:#fff;vertical-align:middle;margin-left:3px}
+.badge-genius{background:#f59e0b;color:#fff}
+.badge-freecx{background:#dcfce7;color:#16a34a}
+.card-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.card-config{font-size:10px;font-style:italic;color:#666;margin-top:3px}
+.tag{font-size:9px;padding:2px 6px;border-radius:3px}
+.cfg-5{background:#dcfce7;color:#16a34a}
+.cfg-4{background:#ecfccb;color:#4d7c0f}
+.cfg-3{background:#fef9c3;color:#a16207}
+.cfg-2{background:#fee2e2;color:#dc2626}
+.tag-row{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;align-items:center}
+.tag-plain{font-size:9px;padding:2px 6px;border-radius:3px;background:#f3f3f1;color:#777}
+.tag-3br{background:#dbeafe;color:#1d4ed8;font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700}
+.card-price{text-align:right;white-space:nowrap}
+.card-price .gbp{font-size:16px;font-weight:800}
+.price-g{color:#16a34a}.price-a{color:#b45309}.price-r{color:#dc2626}
+.card-price .pn{font-size:9px;color:#bbb}
+.card-price .save{font-size:9px;color:var(--green)}
+.card-price .orig{font-size:9px;color:#ccc;text-decoration:line-through}
+.rate-section{grid-column:1/-1;border-top:1px solid #eee;margin-top:6px;padding-top:6px}
+.rate-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px}
+.rate-name{width:52px;font-weight:600;font-size:10px}
+.rate-name.peter{color:#3b82f6}.rate-name.anne{color:#ec4899}.rate-name.christian{color:#f97316}
+.stars{display:flex;gap:2px}
+.star{width:18px;height:18px;cursor:pointer;color:#ddd;font-size:16px;line-height:18px;text-align:center;transition:color .1s;user-select:none}
+.star.filled{color:#f59e0b}
+.star:hover{color:#fbbf24}
+.rate-comment{flex:1;font-size:10px;color:#666;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px}
+.comment-input{flex:1;font-size:10px;padding:2px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans';max-width:280px}
+.rate-you{font-size:9px;color:#ccc}
+.rate-avg{text-align:right;font-size:10px;margin-top:3px}
+.leaflet-popup-content-wrapper{border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.leaflet-popup-content{margin:10px 14px;min-width:220px;max-width:300px;font-family:'DM Sans',sans-serif}
+.pp-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.pp-area{font-size:10px;color:#888;margin-bottom:5px}
+.pp-price{font-size:16px;font-weight:800;margin-bottom:1px}
+.pp-night{font-size:11px;color:#888}
+.pp-detail{font-size:10px;color:#666;line-height:1.6;margin-top:4px}
+.pp-config{font-size:10px;font-style:italic;color:#777;margin-top:3px}
+.pp-link{display:inline-block;margin-top:6px;font-size:10px;text-decoration:none;font-weight:600}
+.pp-link:hover{text-decoration:underline}
+.pp-ratings{margin-top:6px;padding-top:5px;border-top:1px solid #eee;font-size:10px}
+.pp-rate-row{display:flex;align-items:center;gap:4px;margin-bottom:2px}
+#loading{position:fixed;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;z-index:9999;font-size:13px;color:#888;flex-direction:column;gap:8px}
+.spinner{width:28px;height:28px;border:3px solid #eee;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><span>Loading prices &amp; ratings…</span></div>
+
+<div id="app" style="display:none">
+  <div class="hdr">
+    <div>
+      <h1>London Shortlist</h1>
+      <div class="hdr-sub">May 10–14, 2026 · Peter + Anne + Emilie (14) + Christian · 2BR min</div>
+    </div>
+    <div class="hdr-meta">
+      <div>Booked: Burlington Residence <strong>11.326 kr</strong></div>
+      <div id="prices-date">Prices: loading…</div>
+      <div>1 GBP = 8,58 DKK</div>
+    </div>
+  </div>
+
+  <div class="user-bar">
+    <span style="font-weight:700;color:#555">Rating as:</span>
+    <button class="user-btn sel-peter" id="btn-peter" onclick="setUser('peter')">Peter</button>
+    <button class="user-btn" id="btn-anne" onclick="setUser('anne')">Anne</button>
+    <button class="user-btn" id="btn-christian" onclick="setUser('christian')">Christian</button>
+    <span style="margin-left:auto;display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+      <button class="fbtn" onclick="exportRatings()">📋 Export JSON</button>
+      <button class="fbtn" onclick="importRatings()">📥 Import JSON</button>
+      <span id="save-status"></span>
+    </span>
+  </div>
+
+  <div class="ctrl-bar">
+    <span class="lbl">Filter</span>
+    <button class="fbtn active" data-f="all">All</button>
+    <button class="fbtn" data-f="Booking.com">Booking</button>
+    <button class="fbtn" data-f="Airbnb">Airbnb</button>
+    <button class="fbtn" data-f="cfg5">Perfect fit</button>
+    <button class="fbtn" data-f="cfg4">Good+</button>
+    <button class="fbtn" data-f="budget">≤ £1,400</button>
+    <button class="fbtn" data-f="rated">Rated ★</button>
+    <span class="sep">|</span>
+    <span class="lbl">Sort</span>
+    <button class="fbtn active" data-s="score">Score</button>
+    <button class="fbtn" data-s="price">Price</button>
+    <button class="fbtn" data-s="rating">Rating</button>
+    <button class="fbtn" data-s="avgRate">Family ★</button>
+  </div>
+
+  <div class="stats-bar">
+    <span id="stat-count" style="font-weight:700;color:#555">32 properties</span>
+    <span><span class="dot" style="background:#003580"></span>Booking.com (20)</span>
+    <span><span class="dot" style="background:#FF385C"></span>Airbnb (12)</span>
+    <span class="sep">|</span>
+    <span><span class="dot" style="background:#16a34a"></span>Perfect fit</span>
+    <span><span class="dot" style="background:#65a30d"></span>Good fit</span>
+    <span><span class="dot" style="background:#ca8a04"></span>Check config</span>
+    <span class="sep">|</span>
+    <span>Budget: <strong style="color:var(--green)">£1,400 / 12.012 kr</strong></span>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="panel">
+    <div class="explainer" onclick="toggleExplainer()">
+      <div class="explainer-header">
+        <span style="font-weight:700;color:#555">ℹ️ How scores work</span>
+        <span style="color:#bbb;font-size:9px">tap to expand</span>
+      </div>
+      <div class="explainer-detail" id="explainer-detail">
+        Each property scores out of 100 across five factors:<br><br>
+        <strong>Price 25%</strong> — Cheaper is better: £700 = full marks, £1,500 = zero. Budget ceiling £1,400.<br>
+        <strong>Room config 25%</strong> — Perfect = Christian's own BR + real bed for Emilie. Unverified = low.<br>
+        <strong>Location 25%</strong> — ≤1.5km from centre = full marks. +10 bonus if near a tube station.<br>
+        <strong>Rating 15%</strong> — Guest score (9.5+ = full marks).<br>
+        <strong>Reviews 10%</strong> — 100+ = strong signal, &lt;5 = risky.
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<script>
+const FX = 8.58, BUDGET = 1400, NIGHTS = 4;
+const PLAT_COL = {"Booking.com":"#003580","Airbnb":"#FF385C"};
+const CFG_LABEL = {5:"Perfect fit",4:"Good fit",3:"Check config",2:"Poor fit"};
+const CFG_COLOR = {5:"#16a34a",4:"#65a30d",3:"#ca8a04",2:"#dc2626"};
+const BOOKING_URL = s => `https://www.booking.com/hotel/gb/${s}.html?checkin=2026-05-10&checkout=2026-05-14&group_adults=3&group_children=1&age=14&no_rooms=1&selected_currency=GBP`;
+const AB_URL = id => `https://www.airbnb.com/rooms/${id}?checkin=2026-05-10&checkout=2026-05-14&adults=4`;
+
+const AREA_LL = {
+  "Westminster":[51.4995,-0.1248],"Bayswater":[51.5125,-0.1878],"Fitzrovia":[51.5200,-0.1367],
+  "Kings Cross":[51.5308,-0.1238],"Kensington":[51.4990,-0.1938],"Earls Court":[51.4917,-0.1950],
+  "Angel/Islington":[51.5340,-0.1058],"Shoreditch":[51.5265,-0.0796],"Clerkenwell":[51.5235,-0.1050],
+  "Southwark":[51.5030,-0.0930],"South Kensington":[51.4941,-0.1748],"Battersea":[51.4754,-0.1486],
+  "Tower Hamlets":[51.5150,-0.0580],"Soho":[51.5137,-0.1337],"Southbank":[51.5045,-0.1130],
+  "Elephant & Castle":[51.4945,-0.1005],"Regents Park":[51.5270,-0.1535],"Central London":[51.5120,-0.1280],
+  "City of London":[51.5150,-0.0930],"Marylebone":[51.5224,-0.1530],
+};
+
+// p and po injected at runtime from prices.json
+const PROPERTIES = [
+  // ── BOOKING.COM ──────────────────────────────────────────────────────────────────────────
+  {id:1,  pl:"Booking.com", n:"Central London Flat in Westminster", r:9.2, rv:112,  a:"Westminster",      km:1.2, br:2, beds:"1 dbl, 2 sofa",           ba:1, genius:true,  fc:false, cs:2, cn:"Brother on sofa bed — not ideal",   k:true,  w:false, tube:"Westminster",           slug:"central-london-flat-in-westminster"},
+  {id:2,  pl:"Booking.com", n:"Luxury 2BR, Bayswater",             r:9.3, rv:24,   a:"Bayswater",         km:3.2, br:2, beds:"1 queen, 1 dbl, 1 sofa",   ba:2, genius:true,  fc:true,  cs:5, cn:"2 bathrooms! Sofa for Emilie",      k:true,  w:true,  tube:"Bayswater",             slug:"luxury-two-bedroom-apartment-in-bayswater"},
+  {id:3,  pl:"Booking.com", n:"Whitfield Street Apts",             r:8.3, rv:404,  a:"Fitzrovia",          km:1.5, br:2, beds:"2 dbls, 1 sofa",           ba:2, genius:true,  fc:false, cs:5, cn:"Split-level. 2 baths!",              k:true,  w:false, tube:"Goodge Street",         slug:"whitfield-street-apartments-greater-london"},
+  {id:4,  pl:"Booking.com", n:"Imperial Balfe St Apt",             r:8.5, rv:52,   a:"Kings Cross",        km:2.2, br:2, beds:"2 dbls, 1 sofa",           ba:1, genius:true,  fc:true,  cs:4, cn:"Big Genius saving!",                 k:true,  w:false, tube:"King's Cross St Pancras",slug:"imperial-balfe-street-apartment"},
+  {id:5,  pl:"Booking.com", n:"Roland House",                      r:8.1, rv:1119, a:"Kensington",         km:3.5, br:2, beds:"1 queen, 1 twin, 1 sofa",  ba:1, genius:true,  fc:true,  cs:4, cn:"Small 42m²",                         k:false, w:false, tube:"Gloucester Road",       slug:"roland-house-apartments-london"},
+  {id:6,  pl:"Booking.com", n:"Cosy 2BR, Earls Court",             r:8.9, rv:10,   a:"Earls Court",        km:3.8, br:2, beds:"1 king, 1 queen, 2 sofa",  ba:1, genius:true,  fc:true,  cs:5, cn:"75m² spacious!",                     k:true,  w:false, tube:"Earl's Court",          slug:"cosy-2br-central-london-flat-in-earls-court"},
+  {id:7,  pl:"Booking.com", n:"Luxurious 2BR, Angel",              r:8.9, rv:44,   a:"Angel/Islington",    km:3.0, br:2, beds:"TBC",                      ba:1, genius:true,  fc:true,  cs:3, cn:"Verify bed config",                   k:true,  w:false, tube:"Angel",                 slug:"luxurious-2-bedroom-flat-close-to-angel-stn"},
+  {id:8,  pl:"Booking.com", n:"Hyde Park Apartments",              r:8.2, rv:2087, a:"Bayswater",          km:2.8, br:2, beds:"2 dbls, 1 sofa",           ba:1, genius:true,  fc:false, cs:4, cn:"Budget pick! Tiny 40m²",              k:true,  w:false, tube:"Paddington",            slug:"paddington-apartments"},
+  {id:9,  pl:"Booking.com", n:"Grand Plaza Serviced",              r:8.1, rv:6695, a:"Westminster",        km:1.8, br:2, beds:"2 dbls",                   ba:1, genius:true,  fc:true,  cs:3, cn:"Only 2 beds",                          k:true,  w:false, tube:"Paddington",            slug:"grand-plaza-serviced-apartments-ex-somerset-bayswater"},
+  {id:10, pl:"Booking.com", n:"Kensington & Chelsea 2BR",          r:8.4, rv:6,    a:"Kensington",         km:3.2, br:2, beds:"1 twin, 1 dbl, 1 king",    ba:1, genius:true,  fc:true,  cs:5, cn:"Everyone gets a bed!",                k:true,  w:false, tube:"High Street Kensington", slug:"kensington-amp-chelsea-2br-flat-in-central-london"},
+  {id:11, pl:"Booking.com", n:"2BR, Hoxton/Shoreditch",            r:9.2, rv:10,   a:"Shoreditch",         km:3.5, br:2, beds:"2 dbls",                   ba:1, genius:true,  fc:true,  cs:3, cn:"Only 2 beds. Cheapest!",              k:true,  w:false, tube:"Old Street",            slug:"city-pad-hoxton-shoreditch-value-amp-comfort-2-dbl-br"},
+  {id:12, pl:"Booking.com", n:"Kings Cross 3BD Flat",              r:8.0, rv:1,    a:"Clerkenwell",        km:2.0, br:3, beds:"3 dbls, 1 sofa",           ba:1, genius:false, fc:false, cs:5, cn:"3 BEDROOMS! Only 1 review",           k:true,  w:false, tube:"King's Cross St Pancras",slug:"kings-cross-3bd-flat"},
+  {id:13, pl:"Booking.com", n:"A Grand Passion",                   r:8.6, rv:19,   a:"Kensington",         km:3.5, br:2, beds:"2 dbls",                   ba:1, genius:true,  fc:true,  cs:3, cn:"Terrace! Only 2 beds",                k:true,  w:false, tube:"Sloane Square",         slug:"lovely-chelsea-home-near-the-thames"},
+  {id:14, pl:"Booking.com", n:"Museum Gate Apartment",             r:8.5, rv:78,   a:"South Kensington",   km:3.2, br:2, beds:"2 queens",                 ba:1, genius:false, fc:true,  cs:3, cn:"Tiny 35m². Near museums",             k:true,  w:false, tube:"South Kensington",      slug:"heritage-stay-kensington"},
+  {id:15, pl:"Booking.com", n:"Urban Retreat, Southwark",          r:7.7, rv:13,   a:"Southwark",          km:2.5, br:2, beds:"1 twin, 1 dbl, 1 sofa",   ba:1, genius:false, fc:false, cs:4, cn:"Near South Bank!",                   k:true,  w:false, tube:"Southwark",             slug:"urban-retreat-in-southwark-1br-gem-for-3"},
+  {id:16, pl:"Booking.com", n:"Tower Bridge Shard View",           r:8.0, rv:109,  a:"Southwark",          km:2.8, br:2, beds:"2 dbls, 2 sofa",           ba:1, genius:false, fc:true,  cs:4, cn:"Shard views!",                        k:true,  w:false, tube:"London Bridge",         slug:"shard-view-2-bed-entire-flat"},
+  {id:17, pl:"Booking.com", n:"Modern Home, Battersea",            r:8.1, rv:458,  a:"Battersea",          km:3.3, br:2, beds:"2 queens, 1 twin, 1 sofa", ba:2, genius:true,  fc:false, cs:5, cn:"HUGE 180m², 2 baths!",                k:true,  w:true,  tube:"Battersea Power Station",slug:"modern-brixton-apartments"},
+  {id:18, pl:"Booking.com", n:"Marlin Aldgate",                    r:8.1, rv:2519, a:"Tower Hamlets",      km:5.2, br:2, beds:"TBC",                      ba:1, genius:true,  fc:false, cs:3, cn:"Apart-hotel, 5.2km out",              k:true,  w:false, tube:"Aldgate East",          slug:"marlin-apartments-aldgate"},
+  {id:33, pl:"Booking.com", n:"Central 2-Bed, Eye Views",          r:8.4, rv:31,   a:"Southbank",          km:1.5, br:2, beds:"1 full, 1 queen",          ba:1, genius:true,  fc:true,  cs:3, cn:"Exceptional value! Only 2 beds",      k:true,  w:false, tube:"Waterloo",              slug:"spacious-split-level-flat-with-fantastic-views"},
+  {id:34, pl:"Booking.com", n:"Soho Skyline Penthouse",            r:8.6, rv:10,   a:"Soho",               km:1.0, br:2, beds:"1 sofa, 2 queens",         ba:1, genius:true,  fc:true,  cs:4, cn:"130m² penthouse + terrace!",          k:true,  w:false, tube:"Oxford Circus",         slug:"the-kensington-crown"},
+
+  // ── AIRBNB — all room IDs verified via browser scrape 5 Mar 2026 ─────────────────────────
+  {id:22, pl:"Airbnb", n:"Family Friendly, Southbank",       r:9.5, rv:143, a:"Southbank",        km:1.5, br:2, beds:"2 dbls, 1 sofa",  ba:1, genius:false, fc:true,  cs:4, cn:"Superhost. 2 dbls + balcony + free parking", k:true,  w:false, tube:"Waterloo",              roomId:"26912958"},
+  {id:23, pl:"Airbnb", n:"Beautiful 2BR, King's Cross",      r:9.6, rv:216, a:"Kings Cross",      km:2.0, br:2, beds:"2 dbls, 1 sofa",  ba:2, genius:false, fc:false, cs:4, cn:"2 baths, Superhost, 216 reviews",             k:true,  w:false, tube:"King's Cross St Pancras",roomId:"13051741"},
+  {id:24, pl:"Airbnb", n:"Excellent 2-Bed, E&C",             r:9.5, rv:50,  a:"Elephant & Castle",km:2.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:false, cs:4, cn:"Superhost. 4 beds",                            k:true,  w:false, tube:"Elephant & Castle",     roomId:"1360322151297855183"},
+  {id:25, pl:"Airbnb", n:"Luxury 2BR, City Centre",          r:9.6, rv:63,  a:"City of London",   km:2.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:4, cn:"Big discount. Free cancel",                    k:true,  w:false, tube:"Bank",                  roomId:"1031864450057413360"},
+  {id:26, pl:"Airbnb", n:"Heart of Fitzrovia +Outdoor",      r:9.6, rv:96,  a:"Fitzrovia",        km:1.2, br:2, beds:"3 beds TBC",      ba:1, genius:false, fc:false, cs:3, cn:"Outdoor space! Prime location",                k:true,  w:false, tube:"Goodge Street",         roomId:"863833224175086347"},
+  {id:27, pl:"Airbnb", n:"Opposite Regents Park",            r:9.8, rv:81,  a:"Regents Park",     km:2.0, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:4, cn:"4 beds + free cancel",                          k:true,  w:false, tube:"Great Portland Street",  roomId:"37699033"},
+  {id:28, pl:"Airbnb", n:"High-End Flat, Sleeps 5",          r:10.0,rv:6,   a:"Central London",   km:1.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:3, cn:"5.0 stars — only 6 reviews",                   k:true,  w:false, tube:null,                    roomId:"1569486449007504809"},
+  {id:30, pl:"Airbnb", n:"Great Location, WiFi",             r:9.9, rv:26,  a:"Central London",   km:1.5, br:2, beds:"3 beds TBC",      ba:1, genius:false, fc:false, cs:3, cn:"4.96 stars, 26 reviews",                       k:true,  w:false, tube:null,                    roomId:"1040554305155105814"},
+  {id:31, pl:"Airbnb", n:"Modern 2 Bed, Central",            r:9.5, rv:102, a:"Central London",   km:2.0, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:4, cn:"102 reviews, free cancel",                     k:true,  w:false, tube:null,                    roomId:"1245089430967846348"},
+  {id:32, pl:"Airbnb", n:"Fabulous Flat, Westminster",       r:0,   rv:0,   a:"Westminster",      km:2.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:3, cn:"New — no reviews yet",                         k:true,  w:false, tube:"Westminster",           roomId:"1578434939730629161"},
+  {id:38, pl:"Airbnb", n:"Family Home, 3 Bed 2 Bath",        r:10.0,rv:10,  a:"Central London",   km:2.0, br:3, beds:"3 beds",          ba:2, genius:false, fc:true,  cs:5, cn:"3BR + 2 baths, under budget!",                 k:true,  w:false, tube:null,                    roomId:"1528182653940922016"},
+  {id:49, pl:"Airbnb", n:"Marylebone / Baker St 2BR",        r:9.6, rv:345, a:"Marylebone",       km:2.0, br:2, beds:"3 beds TBC",      ba:1, genius:false, fc:true,  cs:3, cn:"345 reviews — most-reviewed Airbnb",           k:true,  w:false, tube:"Baker Street",          roomId:"20438698"},
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let data = [], ratings = {}, currentUser = 'peter';
+let activeFilter = 'all', activeSort = 'score', hovId = null;
+const markers = {};
+
+// ── SCORING ────────────────────────────────────────────────────────────────────
+function calcScore(d) {
+  // Price 25%: linear — £700 or less = 100, £1500+ = 0
+  const pr  = Math.max(0, Math.min(100, (1500 - d.p) / 8));
+  // Location 25%: distance tiers + tube bonus
+  let loc = d.km <= 1.5 ? 100 : d.km <= 2.5 ? 80 : d.km <= 3.5 ? 55 : d.km <= 4.5 ? 30 : 10;
+  if (d.tube) loc = Math.min(100, loc + 10);
+  // Bed config 25%: sharper gradient for unverified
+  const cfg = d.cs >= 5 ? 100 : d.cs >= 4 ? 70 : d.cs >= 3 ? 35 : 10;
+  // Guest rating 15%
+  const rat = d.r >= 9.5 ? 100 : d.r >= 9 ? 85 : d.r >= 8.5 ? 70 : d.r >= 8 ? 55 : d.r >= 7.5 ? 35 : d.r > 0 ? 20 : 0;
+  // Review count 10%
+  const tr  = d.rv >= 500 ? 100 : d.rv >= 100 ? 80 : d.rv >= 20 ? 60 : d.rv >= 5 ? 40 : 15;
+  return Math.round(pr*0.25 + loc*0.25 + cfg*0.25 + rat*0.15 + tr*0.10);
+}
+
+// ── DATA INIT ──────────────────────────────────────────────────────────────────
+function initData(priceMap) {
+  data = PROPERTIES.map(p => {
+    const pm = priceMap[p.id] || {};
+    const price = pm.p || 0, priceOrig = pm.po || price;
+    const url = p.pl === 'Airbnb' ? AB_URL(p.roomId) : BOOKING_URL(p.slug);
+    const d = { ...p, p: price, po: priceOrig,
+      dkk: Math.round(price * FX), dkkO: Math.round(priceOrig * FX),
+      pn: Math.round(price / NIGHTS), dkkN: Math.round((price / NIGHTS) * FX), url };
+    d.score = calcScore(d);
+    return d;
+  });
+}
+
+// ── FORMAT ─────────────────────────────────────────────────────────────────────
+function kr(v) { return v.toLocaleString('da-DK') + '\u00a0kr'; }
+function gbp(v) { return '£' + v.toLocaleString('en-GB'); }
+
+// ── RATINGS (jsonblob.com backend + localStorage fallback) ─────────────────────
+const BLOB_URL = 'https://jsonblob.com/api/jsonBlob/019cbda4-73b8-7bc3-b746-f927e34faae6';
+async function loadRatings() {
+  try {
+    const r = await fetch(BLOB_URL, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+    if (r.ok) { ratings = await r.json(); localStorage.setItem('london-ratings-2026', JSON.stringify(ratings)); }
+  } catch(e) {
+    try { const s = localStorage.getItem('london-ratings-2026'); if(s) ratings = JSON.parse(s); } catch(_){}
+  }
+}
+async function saveRatings(patch) {
+  setStatus('Saving…', '');
+  // Merge patch into ratings locally first
+  if (patch) {
+    Object.entries(patch).forEach(([propId, users]) => {
+      if (!ratings[propId]) ratings[propId] = {};
+      Object.entries(users).forEach(([user, d]) => { if (d.stars !== undefined || d.comment !== undefined) ratings[propId][user] = d; });
+    });
+  }
+  localStorage.setItem('london-ratings-2026', JSON.stringify(ratings));
+  try {
+    const r = await fetch(BLOB_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(ratings) });
+    if (r.ok) { setStatus('Saved ✓', 'ok'); } else { throw new Error('HTTP ' + r.status); }
+  } catch(e) {
+    setStatus('Saved locally', 'ok');
+  }
+  setTimeout(() => setStatus('', ''), 2500);
+}
+function setStatus(msg, cls) { const el = document.getElementById('save-status'); el.textContent = msg; el.className = cls; }
+function setRating(propId, user, stars) {
+  if (!ratings[propId]) ratings[propId] = {};
+  if (!ratings[propId][user]) ratings[propId][user] = {};
+  ratings[propId][user].stars = ratings[propId][user].stars === stars ? 0 : stars;
+  renderCards(); saveRatings({ [propId]: ratings[propId] });
+}
+function setComment(propId, user, text) {
+  if (!ratings[propId]) ratings[propId] = {};
+  if (!ratings[propId][user]) ratings[propId][user] = {};
+  ratings[propId][user].comment = text;
+  saveRatings({ [propId]: ratings[propId] });
+}
+function getAvgRating(propId) {
+  const pr = ratings[propId]; if (!pr) return 0;
+  const vals = Object.values(pr).map(v => v.stars||0).filter(v=>v>0);
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+}
+function exportRatings() {
+  const json = JSON.stringify(ratings, null, 2);
+  navigator.clipboard.writeText(json).then(() => { setStatus('Copied! Send via WhatsApp/email.','ok'); setTimeout(()=>setStatus('',''),4000); })
+    .catch(() => { prompt('Copy this JSON and send to family:', json); });
+}
+function importRatings() {
+  const input = prompt('Paste ratings JSON from family member:'); if (!input) return;
+  try {
+    const incoming = JSON.parse(input);
+    Object.entries(incoming).forEach(([propId, users]) => {
+      if (!ratings[propId]) ratings[propId] = {};
+      Object.entries(users).forEach(([user, d]) => { if (d.stars||d.comment) ratings[propId][user] = d; });
+    });
+    saveRatings(incoming); renderCards(); setStatus('Merged ✓','ok'); setTimeout(()=>setStatus('',''),3000);
+  } catch(e) { alert('Invalid JSON — ask them to re-export'); }
+}
+
+// ── USER ───────────────────────────────────────────────────────────────────────
+function setUser(u) {
+  currentUser = u;
+  document.querySelectorAll('.user-btn').forEach(b => { b.className='user-btn'; if(b.id==='btn-'+u) b.classList.add('sel-'+u); });
+  renderCards();
+}
+
+// ── MAP ────────────────────────────────────────────────────────────────────────
+let leafletMap;
+function initMap() {
+  leafletMap = L.map('map',{zoomControl:true}).setView([51.509,-0.13],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:18}).addTo(leafletMap);
+}
+function getLL(d) {
+  const areaItems = data.filter(x=>x.a===d.a), idx = areaItems.findIndex(x=>x.id===d.id);
+  const base = AREA_LL[d.a]||[51.512,-0.128];
+  if (areaItems.length<=1) return base;
+  const ang=(idx/areaItems.length)*Math.PI*2, r=0.0015+idx*0.0004;
+  return [base[0]+Math.cos(ang)*r, base[1]+Math.sin(ang)*r*1.6];
+}
+function makeIcon(d, hov) {
+  const col=PLAT_COL[d.pl]||'#888', ring=CFG_COLOR[d.cs]||'#ca8a04';
+  const sz=hov?20:d.cs>=5?16:d.cs>=4?14:12, bw=hov?3:2.5;
+  return L.divIcon({className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],
+    html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col};border:${bw}px solid ${hov?'#1a1a1a':ring};box-shadow:0 1px 4px rgba(0,0,0,.35);transition:all .15s"></div>`});
+}
+function buildMarkers() {
+  Object.values(markers).forEach(m=>m.remove()); Object.keys(markers).forEach(k=>delete markers[k]);
+  data.forEach(d => {
+    const m = L.marker(getLL(d),{icon:makeIcon(d,false)}); m._d=d;
+    m.on('click',()=>openPopup(d,m)); m.addTo(leafletMap); markers[d.id]=m;
+  });
+}
+function openPopup(d, m) {
+  const avg=getAvgRating(d.id), pr=ratings[d.id]||{};
+  let rhtml='';
+  ['peter','anne','christian'].forEach(u => {
+    const ur=pr[u]||{}, s=ur.stars||0, c=ur.comment||'';
+    const col=u==='peter'?'#3b82f6':u==='anne'?'#ec4899':'#f97316';
+    rhtml+=`<div class="pp-rate-row"><span style="color:${col};font-weight:600;width:46px;display:inline-block">${u[0].toUpperCase()+u.slice(1)}</span>`;
+    for(let i=1;i<=5;i++) rhtml+=`<span style="color:${i<=s?'#f59e0b':'#ddd'}">★</span>`;
+    if(c) rhtml+=` <span style="color:#999;font-style:italic">${c}</span>`;
+    rhtml+='</div>';
+  });
+  const saving=d.dkkO>d.dkk?`<span style="text-decoration:line-through;color:#ccc;font-size:10px;margin-left:4px">${kr(d.dkkO)}</span> <span style="color:#16a34a;font-size:9px">−${kr(d.dkkO-d.dkk)}</span>`:'';
+  const pc=d.p<=BUDGET?'price-g':'price-r', platCol=PLAT_COL[d.pl];
+  m.unbindPopup();
+  m.bindPopup(
+    `<div class="pp-name">${d.n}</div>`+
+    `<div class="pp-area">${d.a} · ${d.km}km · ${d.br}BR/${d.ba}ba · ${d.beds}</div>`+
+    `<div class="pp-price ${pc}">${kr(d.dkk)}${saving}</div>`+
+    `<div class="pp-night">${kr(d.dkkN)} / nat · ${gbp(d.p)} total</div>`+
+    `<div class="pp-detail"><span class="badge" style="background:${platCol}">${d.pl}</span>`+
+    `<span class="tag cfg-${d.cs}" style="margin-left:3px">${CFG_LABEL[d.cs]}</span>`+
+    (d.fc?`<span class="badge" style="background:#dcfce7;color:#16a34a;margin-left:3px">Free cancel</span>`:'')+
+    (d.genius?`<span class="badge badge-genius" style="margin-left:3px">Genius</span>`:'')+
+    (d.r>0?` · <strong>${d.r}/10</strong> (${d.rv}rv)`:' · No reviews')+` · Score: ${d.score}</div>`+
+    `<div class="pp-config">${d.cn}</div>`+
+    (avg>0?`<div class="pp-ratings">Family avg: <strong style="color:#f59e0b">${avg.toFixed(1)}★</strong>${rhtml}</div>`:'')+
+    `<a class="pp-link" style="color:${platCol}" href="${d.url}" target="_blank" rel="noopener">Open on ${d.pl} →</a>`,
+    {maxWidth:300}).openPopup();
+}
+
+// ── FILTER / SORT / RENDER ─────────────────────────────────────────────────────
+document.querySelector('.ctrl-bar').addEventListener('click', e => {
+  const btn=e.target; if(!btn.classList.contains('fbtn')) return;
+  if(btn.dataset.f){document.querySelectorAll('[data-f]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.f;}
+  if(btn.dataset.s){document.querySelectorAll('[data-s]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeSort=btn.dataset.s;}
+  renderCards(); updateMapVis();
+});
+function filteredData() {
+  return data.filter(d=>{
+    if(activeFilter==='Booking.com') return d.pl==='Booking.com';
+    if(activeFilter==='Airbnb')      return d.pl==='Airbnb';
+    if(activeFilter==='cfg5')        return d.cs===5;
+    if(activeFilter==='cfg4')        return d.cs>=4;
+    if(activeFilter==='budget')      return d.p<=BUDGET;
+    if(activeFilter==='rated')       return getAvgRating(d.id)>0;
+    return true;
+  }).sort((a,b)=>{
+    if(activeSort==='price')   return a.p-b.p;
+    if(activeSort==='rating')  return b.r-a.r;
+    if(activeSort==='avgRate') return getAvgRating(b.id)-getAvgRating(a.id);
+    return b.score-a.score;
+  });
+}
+function updateMapVis() {
+  const vis=new Set(filteredData().map(d=>d.id));
+  Object.entries(markers).forEach(([id,m])=>{
+    if(vis.has(+id)){if(!leafletMap.hasLayer(m))m.addTo(leafletMap);}
+    else{if(leafletMap.hasLayer(m))m.remove();}
+  });
+}
+function renderCards() {
+  const list=filteredData();
+  document.getElementById('stat-count').textContent=`${list.length} of ${data.length} properties`;
+  const el=document.getElementById('cards');
+  el.innerHTML=list.map((d,i)=>{
+    const pc=d.p<=BUDGET?'price-g':'price-r', avg=getAvgRating(d.id), pr=ratings[d.id]||{};
+    const platCol=PLAT_COL[d.pl];
+    const saving=d.dkkO>d.dkk?`<div class="orig">${kr(d.dkkO)}</div><div class="save">−${kr(d.dkkO-d.dkk)}</div>`:'';
+    let rateHtml='<div class="rate-section">';
+    ['peter','anne','christian'].forEach(u=>{
+      const ur=pr[u]||{}, s=ur.stars||0, c=ur.comment||'';
+      rateHtml+=`<div class="rate-row"><span class="rate-name ${u}">${u[0].toUpperCase()+u.slice(1)}</span><span class="stars">`;
+      for(let x=1;x<=5;x++) rateHtml+=`<span class="star${x<=s?' filled':''}" onclick="event.stopPropagation();setRating(${d.id},'${u}',${x})">★</span>`;
+      rateHtml+='</span>';
+      if(u===currentUser){rateHtml+=`<input class="comment-input" placeholder="Add comment…" value="${(c||'').replace(/"/g,'&quot;')}" onchange="setComment(${d.id},'${u}',this.value)" onclick="event.stopPropagation()"/><span class="rate-you">← you</span>`;}
+      else if(c){rateHtml+=`<span class="rate-comment">${c}</span>`;}
+      rateHtml+='</div>';
+    });
+    if(avg>0) rateHtml+=`<div class="rate-avg"><strong style="color:#f59e0b">Avg: ${avg.toFixed(1)}★</strong></div>`;
+    rateHtml+='</div>';
+    return `<div class="card${hovId===d.id?' hov':''}" data-id="${d.id}" onmouseenter="highlightPin(${d.id})" onmouseleave="unhighlightPin(${d.id})">
+      <div>
+        <div class="card-name"><span class="card-num">#${i+1}</span><a href="${d.url}" target="_blank" rel="noopener">${d.n}</a>
+          <span class="badge" style="background:${platCol}">${d.pl==='Booking.com'?'Booking':'Airbnb'}</span>
+          ${d.genius?'<span class="badge badge-genius">G3</span>':''}
+          ${d.fc?'<span class="badge badge-freecx">Free cx</span>':''}
+        </div>
+        <div class="card-sub">${d.a} · ${d.km}km · <strong style="color:${d.r>=9?'#16a34a':d.r>=8.5?'#15803d':'#555'}">${d.r>0?d.r+'/10':'New'}</strong> ${d.rv>0?`(${d.rv}rv)`:''} · ${d.br}BR/${d.ba}ba · ${d.beds}</div>
+        <div class="tag-row">
+          <span class="tag cfg-${d.cs}">${CFG_LABEL[d.cs]}</span>
+          <span class="tag-plain">Score: ${d.score}</span>
+          ${d.br>=3?'<span class="tag-3br">3BR!</span>':''}
+          ${d.k?'<span class="tag-plain">Kitchen</span>':''}
+          ${d.w?'<span class="tag-plain">Washer</span>':''}
+        </div>
+        <div class="card-config">${d.cn}</div>
+      </div>
+      <div class="card-price"><div class="gbp ${pc}">${kr(d.dkk)}</div><div class="pn">${kr(d.dkkN)} / nat</div>${saving}</div>
+      ${rateHtml}
+    </div>`;
+  }).join('');
+}
+function highlightPin(id){hovId=id;const m=markers[id];if(m)m.setIcon(makeIcon(m._d,true));}
+function unhighlightPin(id){hovId=null;const m=markers[id];if(m)m.setIcon(makeIcon(m._d,false));}
+function toggleExplainer(){const el=document.getElementById('explainer-detail');el.style.display=el.style.display==='none'?'block':'none';}
+
+// ── BOOT ───────────────────────────────────────────────────────────────────────
+async function loadPrices() {
+  const r=await fetch('prices.json',{cache:'no-store'});
+  if(!r.ok) throw new Error('prices.json not found');
+  const json=await r.json();
+  if(json._meta?.scraped) document.getElementById('prices-date').textContent=`Prices: ${json._meta.scraped}`;
+  const map={}; (json.prices||[]).forEach(p=>{map[p.id]=p;}); return map;
+}
+async function boot() {
+  try {
+    const [priceMap]=await Promise.all([loadPrices(),loadRatings()]);
+    initData(priceMap); initMap(); buildMarkers(); renderCards();
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='flex';
+  } catch(e) {
+    document.getElementById('loading').innerHTML=`<div style="color:#dc2626;font-size:13px;max-width:300px;text-align:center">⚠️ Could not load prices.json<br><span style="color:#888;font-size:11px;margin-top:4px;display:block">Serve via HTTP — not file://</span></div>`;
+    console.error(e);
+  }
+}
+boot();
+</script>
+</body>
+</html>
