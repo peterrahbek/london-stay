@@ -28,8 +28,8 @@ const CONFIG = {
   checkout:  '2026-05-14',
   adults:    4,      // Airbnb treats 14-year-olds as adults
   children:  0,
-  priceMax:  350,       // per night GBP (£1,400 total / 4 nights)
-  minBeds:   3,
+  priceMax:  500,       // per night GBP — generous, we filter later
+  minBeds:   2,         // relaxed — we score bed config ourselves
   minBedrooms: 2,
   // Bounding box: central London + close suburbs only
   // Roughly: N Hampstead, S Brixton, W Shepherd's Bush, E Bethnal Green
@@ -57,6 +57,7 @@ const SEARCH_URL = () => {
     `&min_bedrooms=${CONFIG.minBedrooms}` +
     `&min_beds=${CONFIG.minBeds}` +
     `&room_types[]=Entire%20home%2Fapt` +
+    `&currency=GBP` +
     `&ne_lat=${b.neLat}&ne_lng=${b.neLng}` +
     `&sw_lat=${b.swLat}&sw_lng=${b.swLng}`
   );
@@ -84,15 +85,41 @@ async function scrapeSearchResults(page) {
   const allListings = [];
   const seenIds = new Set();
 
-  await page.goto(SEARCH_URL(), { waitUntil: 'networkidle', timeout: 30000 });
-  await sleep(2000);
+  console.log(`  URL: ${SEARCH_URL()}`);
+  await page.goto(SEARCH_URL(), { waitUntil: 'domcontentloaded', timeout: 45000 });
+  await sleep(4000); // let Airbnb JS render
 
   for (let pageNum = 1; pageNum <= CONFIG.maxPages; pageNum++) {
     console.log(`\n  Page ${pageNum}...`);
 
     // Wait for cards to load
-    await page.waitForSelector('[data-testid="card-container"]', { timeout: 15000 })
-      .catch(() => console.log('  ⚠ No cards found on this page'));
+    const cardsFound = await page.waitForSelector('[data-testid="card-container"]', { timeout: 15000 })
+      .catch(() => null);
+    if (!cardsFound) {
+      console.log('  ⚠ No cards found — dumping page state for debugging:');
+      console.log('    Title:', await page.title());
+      console.log('    URL:', page.url());
+      const bodyText = await page.evaluate(() => document.body.innerText.substring(0, 500));
+      console.log('    Body:', bodyText.replace(/\n/g, ' ').substring(0, 300));
+      await page.screenshot({ path: 'debug-screenshot.png', fullPage: true });
+      console.log('    Screenshot saved: debug-screenshot.png');
+    }
+
+    // Debug: dump what we see
+    const debugInfo = await page.evaluate(() => {
+      const cards = document.querySelectorAll('[data-testid="card-container"]');
+      const allLinks = [...document.querySelectorAll('a[href*="/rooms/"]')].map(a => a.href).slice(0, 5);
+      const bodySnippet = document.body.innerText.substring(0, 500).replace(/\n/g, ' ');
+      return { cardCount: cards.length, sampleLinks: allLinks, bodySnippet, title: document.title, url: location.href };
+    });
+    console.log(`    Debug: ${debugInfo.cardCount} card-containers, ${debugInfo.sampleLinks.length} /rooms/ links`);
+    if (debugInfo.cardCount === 0) {
+      console.log(`    Title: ${debugInfo.title}`);
+      console.log(`    Body: ${debugInfo.bodySnippet.substring(0, 300)}`);
+      await page.screenshot({ path: 'debug-screenshot.png', fullPage: true });
+      console.log('    Screenshot: debug-screenshot.png');
+    }
+    if (debugInfo.sampleLinks.length > 0) console.log(`    Sample links: ${debugInfo.sampleLinks.join(', ')}`);
 
     // Extract listings from current page
     const listings = await page.evaluate(() => {
@@ -108,9 +135,11 @@ async function scrapeSearchResults(page) {
 
         const inner = card.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ');
 
-        // Price: look for "£NNN for 4 nights" pattern
-        const priceMatch = inner.match(/£([\d,]+)\s+for\s+4\s+nights/);
-        const origPriceMatch = inner.match(/£([\d,]+)\s+£([\d,]+)\s+for\s+4\s+nights/);
+        // Price: look for "£NNN total" or "£NNN for 4 nights" or per-night "£NNN night"
+        const totalMatch = inner.match(/£([\d,]+)\s+total/i);
+        const priceMatch = inner.match(/£([\d,]+)\s+(?:for\s+4\s+nights|per\s+night)/i) || totalMatch;
+        const origPriceMatch = inner.match(/£([\d,]+)\s+£([\d,]+)\s+(?:for|total)/i)
+          || inner.match(/Originally\s+£([\d,]+).*?£([\d,]+)/i);
 
         // Rating and review count
         const ratingMatch = inner.match(/([\d.]+)\s+out of\s+5[^(]*\(?([\d,]+)\s+reviews?\)?/i)
@@ -179,7 +208,8 @@ async function scrapeSearchResults(page) {
     await sleep(jitter(CONFIG.delayBetweenPages));
 
     // Wait for page to update
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {});
+    await sleep(2000);
   }
 
   console.log(`\n  PHASE 1 complete. ${allListings.length} listings scraped.`);
@@ -205,12 +235,16 @@ async function scrapeRoomDetails(page, listings) {
     try {
       await page.goto(
         `https://www.airbnb.com/rooms/${listing.roomId}` +
-        `?checkin=${CONFIG.checkin}&checkout=${CONFIG.checkout}` +
-        `&adults=${CONFIG.adults}`,
+        `?check_in=${CONFIG.checkin}&check_out=${CONFIG.checkout}` +
+        `&adults=${CONFIG.adults}&currency=GBP`,
         { waitUntil: 'domcontentloaded', timeout: 25000 }
       );
 
-      await sleep(1500);
+      await sleep(2000);
+
+      // Dismiss translation modal if present
+      const closeBtn = await page.$('button[aria-label="Close"], [data-testid="translation-announce-modal"] button');
+      if (closeBtn) { await closeBtn.click(); await sleep(500); }
 
       const detail = await page.evaluate(() => {
         const body = document.body.innerText;
@@ -283,7 +317,11 @@ async function scrapeRoomDetails(page, listings) {
         );
 
         // ── Price (in case not captured in search) ──
-        const priceMatch = body.match(/£([\d,]+)\s+for\s+4\s+nights/);
+        // Match GBP: "£1,280 for 4 nights" or "£320 x 4 nights"
+        // Match DKK: "kr 10,980 for 4 nights" or "DKK 10,980"
+        const priceMatch = body.match(/£([\d,]+)\s+(?:for|×|x)\s+4\s+nights/)
+          || body.match(/£([\d,]+)\s+total/i)
+          || body.match(/Total\s+£([\d,]+)/i);
 
         return {
           title,
@@ -427,24 +465,18 @@ function mergeAndSummarise(raw, beds) {
   let browser, context;
 
   if (useRealChrome) {
-    // Use your real Chrome profile — best for avoiding bot detection
-    // Find your Chrome user data dir:
-    //   Mac:   ~/Library/Application Support/Google/Chrome
-    //   Win:   %LOCALAPPDATA%\Google\Chrome\User Data
-    //   Linux: ~/.config/google-chrome
-    const userDataDir = process.env.CHROME_USER_DATA ||
-      (process.platform === 'darwin'
-        ? `${process.env.HOME}/Library/Application Support/Google/Chrome`
-        : process.platform === 'win32'
-          ? `${process.env.LOCALAPPDATA}\\Google\\Chrome\\User Data`
-          : `${process.env.HOME}/.config/google-chrome`);
-
-    console.log(`  Chrome profile: ${userDataDir}`);
+    // Use the real Chrome binary (better fingerprint vs bot detection)
+    // but with a dedicated Playwright profile dir (Chrome won't allow
+    // DevTools debugging on its default profile directory)
+    const userDataDir = path.join(require('os').tmpdir(), 'pw-airbnb-profile');
+    console.log(`  Chrome binary: system Chrome | Profile: ${userDataDir}`);
     context = await chromium.launchPersistentContext(userDataDir, {
-      headless: false,    // must be visible when using real profile
+      headless: false,
       channel: 'chrome',
       args: ['--start-maximized'],
       viewport: null,
+      locale: 'en-GB',
+      timezoneId: 'Europe/London',
     });
     browser = null;
   } else {

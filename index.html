@@ -141,9 +141,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
   </div>
 
   <div class="stats-bar">
-    <span id="stat-count" style="font-weight:700;color:#555">32 properties</span>
+    <span id="stat-count" style="font-weight:700;color:#555">35 properties</span>
     <span><span class="dot" style="background:#003580"></span>Booking.com (20)</span>
-    <span><span class="dot" style="background:#FF385C"></span>Airbnb (12)</span>
+    <span><span class="dot" style="background:#FF385C"></span>Airbnb (15)</span>
     <span class="sep">|</span>
     <span><span class="dot" style="background:#16a34a"></span>Perfect fit</span>
     <span><span class="dot" style="background:#65a30d"></span>Good fit</span>
@@ -189,6 +189,8 @@ const AREA_LL = {
   "Tower Hamlets":[51.5150,-0.0580],"Soho":[51.5137,-0.1337],"Southbank":[51.5045,-0.1130],
   "Elephant & Castle":[51.4945,-0.1005],"Regents Park":[51.5270,-0.1535],"Central London":[51.5120,-0.1280],
   "City of London":[51.5150,-0.0930],"Marylebone":[51.5224,-0.1530],
+  "Notting Hill":[51.5115,-0.2055],"Maida Vale":[51.5295,-0.1870],"Kilburn":[51.5370,-0.1963],
+  "Bloomsbury":[51.5225,-0.1275],
 };
 
 // p and po injected at runtime from prices.json
@@ -215,19 +217,22 @@ const PROPERTIES = [
   {id:33, pl:"Booking.com", n:"Central 2-Bed, Eye Views",          r:8.4, rv:31,   a:"Southbank",          km:1.5, br:2, beds:"1 full, 1 queen",          ba:1, genius:true,  fc:true,  cs:3, cn:"Exceptional value! Only 2 beds",      k:true,  w:false, tube:"Waterloo",              slug:"spacious-split-level-flat-with-fantastic-views"},
   {id:34, pl:"Booking.com", n:"Soho Skyline Penthouse",            r:8.6, rv:10,   a:"Soho",               km:1.0, br:2, beds:"1 sofa, 2 queens",         ba:1, genius:true,  fc:true,  cs:4, cn:"130m² penthouse + terrace!",          k:true,  w:false, tube:"Oxford Circus",         slug:"the-kensington-crown"},
 
-  // ── AIRBNB — all room IDs verified via browser scrape 5 Mar 2026 ─────────────────────────
-  {id:22, pl:"Airbnb", n:"Family Friendly, Southbank",       r:9.5, rv:143, a:"Southbank",        km:1.5, br:2, beds:"2 dbls, 1 sofa",  ba:1, genius:false, fc:true,  cs:4, cn:"Superhost. 2 dbls + balcony + free parking", k:true,  w:false, tube:"Waterloo",              roomId:"26912958"},
-  {id:23, pl:"Airbnb", n:"Beautiful 2BR, King's Cross",      r:9.6, rv:216, a:"Kings Cross",      km:2.0, br:2, beds:"2 dbls, 1 sofa",  ba:2, genius:false, fc:false, cs:4, cn:"2 baths, Superhost, 216 reviews",             k:true,  w:false, tube:"King's Cross St Pancras",roomId:"13051741"},
-  {id:24, pl:"Airbnb", n:"Excellent 2-Bed, E&C",             r:9.5, rv:50,  a:"Elephant & Castle",km:2.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:false, cs:4, cn:"Superhost. 4 beds",                            k:true,  w:false, tube:"Elephant & Castle",     roomId:"1360322151297855183"},
-  {id:25, pl:"Airbnb", n:"Luxury 2BR, City Centre",          r:9.6, rv:63,  a:"City of London",   km:2.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:4, cn:"Big discount. Free cancel",                    k:true,  w:false, tube:"Bank",                  roomId:"1031864450057413360"},
-  {id:26, pl:"Airbnb", n:"Heart of Fitzrovia +Outdoor",      r:9.6, rv:96,  a:"Fitzrovia",        km:1.2, br:2, beds:"3 beds TBC",      ba:1, genius:false, fc:false, cs:3, cn:"Outdoor space! Prime location",                k:true,  w:false, tube:"Goodge Street",         roomId:"863833224175086347"},
-  {id:27, pl:"Airbnb", n:"Opposite Regents Park",            r:9.8, rv:81,  a:"Regents Park",     km:2.0, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:4, cn:"4 beds + free cancel",                          k:true,  w:false, tube:"Great Portland Street",  roomId:"37699033"},
-  {id:28, pl:"Airbnb", n:"High-End Flat, Sleeps 5",          r:10.0,rv:6,   a:"Central London",   km:1.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:3, cn:"5.0 stars — only 6 reviews",                   k:true,  w:false, tube:null,                    roomId:"1569486449007504809"},
-  {id:30, pl:"Airbnb", n:"Great Location, WiFi",             r:9.9, rv:26,  a:"Central London",   km:1.5, br:2, beds:"3 beds TBC",      ba:1, genius:false, fc:false, cs:3, cn:"4.96 stars, 26 reviews",                       k:true,  w:false, tube:null,                    roomId:"1040554305155105814"},
-  {id:31, pl:"Airbnb", n:"Modern 2 Bed, Central",            r:9.5, rv:102, a:"Central London",   km:2.0, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:4, cn:"102 reviews, free cancel",                     k:true,  w:false, tube:null,                    roomId:"1245089430967846348"},
-  {id:32, pl:"Airbnb", n:"Fabulous Flat, Westminster",       r:0,   rv:0,   a:"Westminster",      km:2.5, br:2, beds:"4 beds TBC",      ba:1, genius:false, fc:true,  cs:3, cn:"New — no reviews yet",                         k:true,  w:false, tube:"Westminster",           roomId:"1578434939730629161"},
-  {id:38, pl:"Airbnb", n:"Family Home, 3 Bed 2 Bath",        r:10.0,rv:10,  a:"Central London",   km:2.0, br:3, beds:"3 beds",          ba:2, genius:false, fc:true,  cs:5, cn:"3BR + 2 baths, under budget!",                 k:true,  w:false, tube:null,                    roomId:"1528182653940922016"},
-  {id:49, pl:"Airbnb", n:"Marylebone / Baker St 2BR",        r:9.6, rv:345, a:"Marylebone",       km:2.0, br:2, beds:"3 beds TBC",      ba:1, genius:false, fc:true,  cs:3, cn:"345 reviews — most-reviewed Airbnb",           k:true,  w:false, tube:"Baker Street",          roomId:"20438698"},
+  // ── AIRBNB — fresh Playwright scrape 5 Mar 2026, beds verified from room pages ──────────
+  {id:21, pl:"Airbnb", n:"Beautiful 2BR, King's Cross",       r:9.6, rv:216, a:"Kings Cross",       km:2.5, br:2, beds:"2 dbls, 1 sofa",            ba:2, genius:false, fc:false, cs:4, cn:"2 baths, Superhost. Emilie on sofa",           k:true,  w:false, tube:"King's Cross St Pancras",roomId:"13051741"},
+  {id:22, pl:"Airbnb", n:"Family Home, 3BR 2.5BA",            r:10.0,rv:10,  a:"Kilburn",           km:5.5, br:3, beds:"1 king, 2 dbls",            ba:2, genius:false, fc:true,  cs:5, cn:"3BR + 2.5 baths! But 5.5km from centre",    k:true,  w:false, tube:"Kilburn",               roomId:"1528182653940922016"},
+  {id:23, pl:"Airbnb", n:"Elegant 2BR, Angel Station",        r:9.7, rv:28,  a:"Angel/Islington",   km:3.0, br:2, beds:"1 king, 1 dbl, 2 sofa",     ba:1, genius:false, fc:false, cs:4, cn:"2min to Angel stn. King + dbl + sofa",        k:true,  w:false, tube:"Angel",                 roomId:"1574130309268166632"},
+  {id:24, pl:"Airbnb", n:"Iconic Portobello Rd Flat",         r:9.7, rv:30,  a:"Notting Hill",      km:3.8, br:2, beds:"1 dbl, 1 king",             ba:1, genius:false, fc:false, cs:3, cn:"Only 2 beds! No sofa. Iconic location",        k:true,  w:false, tube:"Ladbroke Grove",         roomId:"1563065631546334628"},
+  {id:25, pl:"Airbnb", n:"High-End Flat, Maida Vale",         r:10.0,rv:6,   a:"Maida Vale",        km:4.5, br:2, beds:"2 kings, 1 sofa",           ba:1, genius:false, fc:true,  cs:4, cn:"2 king beds. Renovated Dec 2025. 4.5km out", k:true,  w:false, tube:"Maida Vale",            roomId:"1569486449007504809"},
+  {id:26, pl:"Airbnb", n:"Modern 2 Bed, South Kensington",    r:9.5, rv:102, a:"South Kensington",  km:3.5, br:2, beds:"2 dbls, 1 single, 1 sofa",  ba:1, genius:false, fc:true,  cs:5, cn:"Everyone gets a bed! 4min to S.Ken stn",     k:true,  w:false, tube:"South Kensington",      roomId:"1245089430967846348"},
+  {id:27, pl:"Airbnb", n:"Opposite Regents Park",             r:9.8, rv:81,  a:"Marylebone",        km:2.5, br:2, beds:"4 beds (2 baths)",           ba:2, genius:false, fc:true,  cs:5, cn:"Guest favourite. 4 beds + 2 baths",          k:true,  w:false, tube:"Baker Street",          roomId:"37699033"},
+  {id:28, pl:"Airbnb", n:"Great Location, Soho",              r:9.9, rv:26,  a:"Soho",              km:1.0, br:2, beds:"1 king, 1 dbl, 1 sofa",     ba:1, genius:false, fc:false, cs:4, cn:"King + dbl + sofa. Nr British Museum",         k:true,  w:false, tube:"Tottenham Court Road",   roomId:"1040554305155105814"},
+  {id:29, pl:"Airbnb", n:"Charming 2BR, Bloomsbury",          r:10.0,rv:12,  a:"Bloomsbury",        km:1.5, br:2, beds:"2 queens",                  ba:1, genius:false, fc:false, cs:3, cn:"Only 2 queens. Nr Russell Sq. 5.0 stars",      k:true,  w:false, tube:"Russell Square",        roomId:"1089280434959315262"},
+  {id:30, pl:"Airbnb", n:"Cosy 2 Bed, Notting Hill",          r:9.8, rv:36,  a:"Notting Hill",      km:3.8, br:2, beds:"1 dbl, 1 king, 1 sofa",     ba:2, genius:false, fc:true,  cs:4, cn:"2 baths! Notting Hill Gate. Right at budget", k:true,  w:false, tube:"Notting Hill Gate",     roomId:"1546421639284853985"},
+  {id:31, pl:"Airbnb", n:"2-Bed Central Flat, Paddington",    r:9.4, rv:32,  a:"Bayswater",         km:2.8, br:2, beds:"1 dbl, 1 single, 1 sofa",   ba:1, genius:false, fc:false, cs:4, cn:"Guest Favourite! £606 total — bargain",         k:true,  w:false, tube:"Paddington",            roomId:"1409406450351930736"},
+  {id:32, pl:"Airbnb", n:"Warehouse 2BR, Bermondsey",         r:9.8, rv:25,  a:"Southwark",         km:3.0, br:2, beds:"2 kings",                   ba:2, genius:false, fc:false, cs:3, cn:"Only 2 beds. Cool warehouse, 2 baths, £858",    k:true,  w:false, tube:"Bermondsey",            roomId:"1266686522709943022"},
+  {id:35, pl:"Airbnb", n:"2-Bed 2-Bath, Old Street",          r:9.6, rv:20,  a:"Angel/Islington",   km:3.5, br:2, beds:"beds TBC (2 baths)",         ba:2, genius:false, fc:true,  cs:3, cn:"2 baths, canal views. Beds need verifying",    k:true,  w:false, tube:"Old Street",            roomId:"1008555117936175986"},
+  {id:36, pl:"Airbnb", n:"Large 3BR + Terrace, Holloway",     r:9.9, rv:15,  a:"Angel/Islington",   km:4.5, br:3, beds:"3BR beds TBC",               ba:2, genius:false, fc:true,  cs:3, cn:"3BR + 2 baths + terrace! 4.93 stars. Beds TBC",k:true,  w:false, tube:"Holloway Road",         roomId:"1482661163845004502"},
+  {id:37, pl:"Airbnb", n:"2BR, Piccadilly Circus",            r:9.5, rv:18,  a:"Soho",              km:0.8, br:2, beds:"2 dbls, 1 sofa",             ba:1, genius:false, fc:true,  cs:4, cn:"Steps from Piccadilly Circus. Free cancel",    k:true,  w:false, tube:"Piccadilly Circus",     roomId:"1247713596385673847"},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
