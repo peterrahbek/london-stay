@@ -278,7 +278,7 @@ function gbp(v) { return '£' + v.toLocaleString('en-GB'); }
 const BLOB_URL = 'https://jsonblob.com/api/jsonBlob/019cbda4-73b8-7bc3-b746-f927e34faae6';
 async function loadRatings() {
   try {
-    const r = await fetch(BLOB_URL, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+    const r = await fetch(BLOB_URL, { cache: 'no-store' });
     if (r.ok) { ratings = await r.json(); localStorage.setItem('london-ratings-2026', JSON.stringify(ratings)); }
   } catch(e) {
     try { const s = localStorage.getItem('london-ratings-2026'); if(s) ratings = JSON.parse(s); } catch(_){}
@@ -295,7 +295,7 @@ async function saveRatings(patch) {
   }
   localStorage.setItem('london-ratings-2026', JSON.stringify(ratings));
   try {
-    const r = await fetch(BLOB_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(ratings) });
+    const r = await fetch(BLOB_URL, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(ratings) });
     if (r.ok) { setStatus('Saved ✓', 'ok'); } else { throw new Error('HTTP ' + r.status); }
   } catch(e) {
     setStatus('Saved locally', 'ok');
