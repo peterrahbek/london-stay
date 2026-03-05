@@ -316,6 +316,13 @@ async function scrapeRoomDetails(page, listings) {
           new RegExp('\\b' + a.replace("'","'?") + '\\b', 'i').test(body)
         );
 
+        // ── Availability check ──
+        // If the page shows "Add dates" or "not available" the listing isn't bookable for these dates
+        const notAvailable = /Add dates for prices|not available|unavailable|sold out/i.test(body);
+        const reserveBtn = document.querySelector('[data-testid="homes-pdp-cta-btn"]');
+        const reserveText = reserveBtn?.innerText || '';
+        const isBookable = !notAvailable && /reserve|book/i.test(reserveText);
+
         // ── Price (in case not captured in search) ──
         // Match GBP: "£1,280 for 4 nights" or "£320 x 4 nights"
         // Match DKK: "kr 10,980 for 4 nights" or "DKK 10,980"
@@ -335,13 +342,15 @@ async function scrapeRoomDetails(page, listings) {
           totalBeds,
           bedrooms,
           bathrooms,
+          available: isBookable,
           price4n: priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : null,
           scrapedAt: new Date().toISOString(),
         };
       });
 
       bedsData.push({ roomId: listing.roomId, ...detail });
-      console.log(`    ✓ "${detail.title.substring(0, 50)}" | Areas: ${detail.foundAreas.slice(0, 3).join(', ')} | Beds: ${JSON.stringify(detail.bedTypes)}`);
+      const avail = detail.available ? '✓' : '✗ NOT AVAILABLE';
+      console.log(`    ${avail} "${detail.title.substring(0, 50)}" | Areas: ${detail.foundAreas.slice(0, 3).join(', ')} | Beds: ${JSON.stringify(detail.bedTypes)}${detail.price4n ? ' | £'+detail.price4n : ''}`);
 
     } catch (err) {
       console.log(`    ✗ Error: ${err.message}`);

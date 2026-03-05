@@ -78,6 +78,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
 .comment-input{flex:1;font-size:10px;padding:2px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans';max-width:280px}
 .rate-you{font-size:9px;color:#ccc}
 .rate-avg{text-align:right;font-size:10px;margin-top:3px}
+.leaflet-tile-pane{filter:saturate(0.3) brightness(1.05) contrast(0.95)}
 .leaflet-popup-content-wrapper{border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
 .leaflet-popup-content{margin:10px 14px;min-width:220px;max-width:300px;font-family:'DM Sans',sans-serif}
 .pp-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px}
@@ -360,7 +361,7 @@ function getLL(d) {
 }
 function makeIcon(d, hov) {
   const col=PLAT_COL[d.pl]||'#888', ring=CFG_COLOR[d.cs]||'#ca8a04';
-  const sz=hov?20:d.cs>=5?16:d.cs>=4?14:12, bw=hov?3:2.5;
+  const sz=hov?24:d.cs>=5?18:d.cs>=4?16:14, bw=hov?3:2.5;
   return L.divIcon({className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],
     html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col};border:${bw}px solid ${hov?'#1a1a1a':ring};box-shadow:0 1px 4px rgba(0,0,0,.35);transition:all .15s"></div>`});
 }
