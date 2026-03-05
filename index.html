@@ -347,8 +347,10 @@ function setUser(u) {
 // ── MAP ────────────────────────────────────────────────────────────────────────
 let leafletMap;
 function initMap() {
-  leafletMap = L.map('map',{zoomControl:true}).setView([51.509,-0.13],13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:18}).addTo(leafletMap);
+  leafletMap = L.map('map',{zoomControl:true}).setView([51.505,-0.12],12);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:18}).addTo(leafletMap);
+  // Ensure tiles load after layout paint
+  setTimeout(() => leafletMap.invalidateSize(), 200);
 }
 function getLL(d) {
   const areaItems = data.filter(x=>x.a===d.a), idx = areaItems.findIndex(x=>x.id===d.id);
@@ -365,10 +367,14 @@ function makeIcon(d, hov) {
 }
 function buildMarkers() {
   Object.values(markers).forEach(m=>m.remove()); Object.keys(markers).forEach(k=>delete markers[k]);
+  const bounds = L.latLngBounds();
   data.forEach(d => {
-    const m = L.marker(getLL(d),{icon:makeIcon(d,false)}); m._d=d;
+    const ll = getLL(d);
+    const m = L.marker(ll,{icon:makeIcon(d,false)}); m._d=d;
     m.on('click',()=>openPopup(d,m)); m.addTo(leafletMap); markers[d.id]=m;
+    bounds.extend(ll);
   });
+  if (bounds.isValid()) leafletMap.fitBounds(bounds, {padding:[30,30], maxZoom:14});
 }
 function openPopup(d, m) {
   const avg=getAvgRating(d.id), pr=ratings[d.id]||{};
