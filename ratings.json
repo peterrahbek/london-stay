@@ -26,7 +26,7 @@
   "9": {
     "peter": {
       "stars": 3,
-      "comment": "Lille! 2BR Apartment (6 Adults) til 1059 gbp kunne gå an"
+      "comment": "Lille! 2BR Apartment (6 Adults) til 1059 gbp kunne gÃ¥ an"
     }
   },
   "11": {
@@ -38,13 +38,13 @@
   "12": {
     "peter": {
       "stars": 2,
-      "comment": "Lille. Og tre værelser-ish"
+      "comment": "Lille. Og tre vÃ¦relser-ish"
     }
   },
   "18": {
     "peter": {
       "stars": 1,
-      "comment": "For få sengepladser"
+      "comment": "For fÃ¥ sengepladser"
     }
   },
   "21": {
@@ -55,7 +55,7 @@
   "23": {
     "peter": {
       "stars": 3,
-      "comment": "Fin, men kælder"
+      "comment": "Fin, men kÃ¦lder"
     }
   },
   "27": {
@@ -79,7 +79,7 @@
   "33": {
     "peter": {
       "stars": 1,
-      "comment": "Tight. Ekstra seng koster 200 kr, hvis det kan lade sig gøre"
+      "comment": "Tight. Ekstra seng koster 200 kr, hvis det kan lade sig gÃ¸re"
     }
   },
   "34": {
@@ -115,6 +115,11 @@
     "peter": {
       "stars": 2,
       "comment": "Mangler en seng"
+    }
+  },
+  "40": {
+    "peter": {
+      "stars": 4
     }
   }
 }
