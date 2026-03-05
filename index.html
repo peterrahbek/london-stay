@@ -118,8 +118,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
     <button class="user-btn" id="btn-anne" onclick="setUser('anne')">Anne</button>
     <button class="user-btn" id="btn-christian" onclick="setUser('christian')">Christian</button>
     <span style="margin-left:auto;display:flex;gap:4px;align-items:center;flex-wrap:wrap">
-      <button class="fbtn" onclick="exportRatings()">📋 Export JSON</button>
-      <button class="fbtn" onclick="importRatings()">📥 Import JSON</button>
+      <button class="fbtn" onclick="exportRatings()">📋 Export</button>
+      <button class="fbtn" onclick="importRatings()">📥 Import</button>
+      <button class="fbtn" id="sync-btn" onclick="setupSync()" title="Set up cross-device sync">⚙️ Sync</button>
       <span id="save-status"></span>
     </span>
   </div>
@@ -274,19 +275,43 @@ function initData(priceMap) {
 function kr(v) { return v.toLocaleString('da-DK') + '\u00a0kr'; }
 function gbp(v) { return '£' + v.toLocaleString('en-GB'); }
 
-// ── RATINGS (jsonblob.com backend + localStorage fallback) ─────────────────────
-const BLOB_URL = 'https://jsonblob.com/api/jsonBlob/019cbda4-73b8-7bc3-b746-f927e34faae6';
+// ── RATINGS (GitHub API backend + localStorage fallback) ─────────────────────
+const GH_REPO = 'peterrahbek/london-stay';
+const GH_FILE = 'ratings.json';
+const GH_API = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+let ghSha = null; // track file SHA for updates
+
+function getGhToken() { return localStorage.getItem('london-gh-token'); }
+function setGhToken(t) { if(t) localStorage.setItem('london-gh-token',t); }
+
+// On load, check URL fragment for token setup: #token=ghp_xxx
+(function checkTokenFragment() {
+  const h = location.hash;
+  if (h.startsWith('#token=')) {
+    const t = h.slice(7);
+    if (t.startsWith('ghp_') || t.startsWith('github_pat_')) { setGhToken(t); }
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+})();
+
 async function loadRatings() {
   try {
-    const r = await fetch(BLOB_URL, { cache: 'no-store' });
-    if (r.ok) { ratings = await r.json(); localStorage.setItem('london-ratings-2026', JSON.stringify(ratings)); }
+    const r = await fetch(GH_API, { cache: 'no-store', headers: { Accept: 'application/vnd.github.v3+json' } });
+    if (r.ok) {
+      const j = await r.json();
+      ghSha = j.sha;
+      const content = JSON.parse(atob(j.content.replace(/\n/g, '')));
+      ratings = content;
+      localStorage.setItem('london-ratings-2026', JSON.stringify(ratings));
+    }
   } catch(e) {
     try { const s = localStorage.getItem('london-ratings-2026'); if(s) ratings = JSON.parse(s); } catch(_){}
   }
 }
+
+let _saveTimer = null;
 async function saveRatings(patch) {
   setStatus('Saving…', '');
-  // Merge patch into ratings locally first
   if (patch) {
     Object.entries(patch).forEach(([propId, users]) => {
       if (!ratings[propId]) ratings[propId] = {};
@@ -294,13 +319,30 @@ async function saveRatings(patch) {
     });
   }
   localStorage.setItem('london-ratings-2026', JSON.stringify(ratings));
+  // Debounce GitHub writes to avoid conflicts
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => _pushToGitHub(), 800);
+}
+
+async function _pushToGitHub() {
+  const token = getGhToken();
+  if (!token) { setStatus('Saved locally (no sync token)', 'ok'); setTimeout(()=>setStatus('',''),3000); return; }
   try {
-    const r = await fetch(BLOB_URL, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(ratings) });
-    if (r.ok) { setStatus('Saved ✓', 'ok'); } else { throw new Error('HTTP ' + r.status); }
+    // Get latest SHA first to avoid conflicts
+    const head = await fetch(GH_API, { headers: { Accept: 'application/vnd.github.v3+json', Authorization: `token ${token}` } });
+    if (head.ok) { const hj = await head.json(); ghSha = hj.sha; }
+    const body = { message: 'Update ratings', content: btoa(JSON.stringify(ratings, null, 2)), sha: ghSha };
+    const r = await fetch(GH_API, { method: 'PUT', headers: { Accept: 'application/vnd.github.v3+json', Authorization: `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.ok) {
+      const rj = await r.json(); ghSha = rj.content.sha;
+      setStatus('Synced ✓', 'ok');
+    } else if (r.status === 401 || r.status === 403) {
+      setStatus('Token expired — need new token', 'err');
+    } else { throw new Error('HTTP ' + r.status); }
   } catch(e) {
     setStatus('Saved locally', 'ok');
   }
-  setTimeout(() => setStatus('', ''), 2500);
+  setTimeout(() => setStatus('', ''), 3000);
 }
 function setStatus(msg, cls) { const el = document.getElementById('save-status'); el.textContent = msg; el.className = cls; }
 function setRating(propId, user, stars) {
@@ -335,6 +377,22 @@ function importRatings() {
     });
     saveRatings(incoming); renderCards(); setStatus('Merged ✓','ok'); setTimeout(()=>setStatus('',''),3000);
   } catch(e) { alert('Invalid JSON — ask them to re-export'); }
+}
+function setupSync() {
+  const cur = getGhToken();
+  const msg = cur
+    ? 'Sync is active. Paste a new token to update, or leave blank to keep current:'
+    : 'To sync ratings across devices, paste a GitHub Personal Access Token.\n\nCreate one at: github.com → Settings → Developer settings → Fine-grained tokens\nScope: just this repo, Contents read+write.\n\nPaste token:';
+  const t = prompt(msg);
+  if (t === null) return;
+  if (t.trim()) { setGhToken(t.trim()); setStatus('Token saved — syncing...','ok'); _pushToGitHub(); }
+  updateSyncBtn();
+}
+function updateSyncBtn() {
+  const btn = document.getElementById('sync-btn');
+  if (!btn) return;
+  btn.textContent = getGhToken() ? '🔄 Synced' : '⚙️ Sync';
+  btn.style.background = getGhToken() ? '#dcfce7' : '';
 }
 
 // ── USER ───────────────────────────────────────────────────────────────────────
@@ -493,7 +551,7 @@ async function loadPrices() {
 async function boot() {
   try {
     const [priceMap]=await Promise.all([loadPrices(),loadRatings()]);
-    initData(priceMap); initMap(); buildMarkers(); renderCards();
+    initData(priceMap); initMap(); buildMarkers(); renderCards(); updateSyncBtn();
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='flex';
   } catch(e) {
